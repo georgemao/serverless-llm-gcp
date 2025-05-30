@@ -1,4 +1,5 @@
 # Deploy your own Serverless LLM on Google Cloud Run
+Medium post with full walk through available [here](https://georgemao.medium.com/cloud-run-gpu-serverless-llms-d569ffc4af50).
 
 ## Preqs
 Make sure the following APIs are all enabled in your GCP Project
@@ -13,7 +14,7 @@ gcloud services enable run.googleapis.com \
 If you want to use Zonal Redudancy, you will need to request a Quota increase for the following Quota. The sample code is configured to disable Zonal Redudancy.
 Total Nvidia L4 GPU allocation with zonal redundancy, per project per region
 
-Replace [your gcp project id here] with your GCP project id
+Replace [your gcp project id here] with your GCP project id.
 
 ## Create a repo on Artifact Registry to host our Docker images
 

@@ -15,7 +15,7 @@ spec:
         run.googleapis.com/gpu-zonal-redundancy-disabled: 'true' #only necessary if you have not lifted the Quota for: Total Nvidia L4 GPU allocation with zonal redundancy
 
     spec:
-      containerConcurrency: 80
+      containerConcurrency: 5 # Default is 80. Tune this number based on workload & resource utilization vs CPU/Memory allocation
       timeoutSeconds: 300
       containers:
       - name: openwebui
