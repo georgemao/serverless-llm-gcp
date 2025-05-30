@@ -1,0 +1,71 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: ollama-sidecar-gemma-demo
+  labels:
+    cloud.googleapis.com/location: us-central1
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/maxScale: '5'
+        run.googleapis.com/cpu-throttling: 'false'
+        run.googleapis.com/startup-cpu-boost: 'true'
+        run.googleapis.com/container-dependencies: '{"openwebui":["ollama-sidecar"]}'
+        run.googleapis.com/gpu-zonal-redundancy-disabled: 'true' #only necessary if you have not lifted the Quota for: Total Nvidia L4 GPU allocation with zonal redundancy
+
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      containers:
+      - name: openwebui
+        image: us-central1-docker.pkg.dev/gmao-test-project/ollama-sidecar-gemma-repo/openwebui
+        ports:
+        - name: http1
+          containerPort: 8080
+        env:
+        - name: OLLAMA_BASE_URL
+          value: http://localhost:11434
+        - name: WEBUI_AUTH
+          value: 'false'
+        resources:
+          limits:
+            memory: 1Gi
+            cpu: 2000m
+        volumeMounts:
+        - name: in-memory-1
+          mountPath: /app/backend/data
+        startupProbe:
+          timeoutSeconds: 240
+          periodSeconds: 240
+          failureThreshold: 2
+          tcpSocket:
+            port: 8080
+      - name: ollama-sidecar
+        image: us-central1-docker.pkg.dev/gmao-test-project/ollama-sidecar-gemma-repo/ollama-gemma-4b
+        resources:
+          limits:
+            cpu: '6'
+            nvidia.com/gpu: '1'
+            memory: 16Gi
+        volumeMounts:
+        - name: gcs-1
+          mountPath: /root/.ollama
+        startupProbe:
+          timeoutSeconds: 1
+          periodSeconds: 10
+          failureThreshold: 3
+          tcpSocket:
+            port: 11434
+      volumes:
+      - name: gcs-1
+        csi:
+          driver: gcsfuse.run.googleapis.com
+          volumeAttributes:
+            bucketName: gmao-gemma-bucket
+      - name: in-memory-1
+        emptyDir:
+          medium: Memory
+          sizeLimit: 10Gi
+      nodeSelector:
+        run.googleapis.com/accelerator: nvidia-l4
